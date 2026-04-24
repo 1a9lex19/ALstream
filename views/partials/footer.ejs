@@ -1,0 +1,70 @@
+<footer class="site-footer">
+    <div class="footer-container">
+        <div class="footer-col links">
+            <h3>LIENS UTILES</h3>
+            <ul>
+                <li><a href="/catalog">Catalogue</a></li>
+                <li><a href="/planning">Planning des sorties</a></li>
+                <li><a href="/profile">Mon profil</a></li>
+            </ul>
+        </div>
+        <div class="footer-col causes">
+            <h3>NOUS SOUTENIR</h3>
+            <ul>
+                <li><a href="https://discord.gg/5Sahj3X5gV" target="_blank">Discord</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <div class="copyright">
+            <span class="logo-text">AL</span>
+            <div class="copy-text">
+                <strong>© 2026 ALStream</strong><br>
+                <span>Tous droits réservés</span>
+            </div>
+        </div>
+        <div class="socials">
+            <a href="#" target="_blank"><i class="fa-brands fa-x-twitter"></i> @ALStreamFR</a>
+        </div>
+    </div>
+
+    <a href="#" class="back-to-top" id="backToTop">
+        <i class="fa-solid fa-arrow-up"></i>
+    </a>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const backToTopBtn = document.getElementById("backToTop");
+            const footer = document.querySelector("footer.site-footer");
+
+            if (!backToTopBtn || !footer) return;
+
+            function handleScroll() {
+                if (window.scrollY > 300) {
+                    backToTopBtn.classList.add("show");
+                } else {
+                    backToTopBtn.classList.remove("show");
+                }
+
+                const footerRect = footer.getBoundingClientRect();
+                const windowHeight = window.innerHeight;
+                const margin = 30; // Marge entre le bouton et le footer
+
+                if (footerRect.top < windowHeight) {
+                    const newBottom = (windowHeight - footerRect.top) + margin; 
+                    backToTopBtn.style.bottom = `${newBottom}px`;
+                } else {
+                    backToTopBtn.style.bottom = `${margin}px`;
+                }
+            }
+
+            window.addEventListener("scroll", handleScroll);
+
+            backToTopBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            });
+        });
+    </script>
+</footer>

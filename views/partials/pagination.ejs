@@ -1,0 +1,43 @@
+<% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+    <div class="pagination">
+        <!-- Bouton Précédent -->
+        <% if (currentPage > 1) { %>
+            <a href="/catalog?type=<%= currentFilter %>&sort=<%= currentSort %>&page=<%= currentPage - 1 %>" class="pag-btn">
+                <i class="fa-solid fa-chevron-left"></i>
+            </a>
+        <% } %>
+
+        <!-- Numéros de pages -->
+        <% 
+            let pages = [];
+            if (totalPages <= 8) {
+                for (let i = 1; i <= totalPages; i++) pages.push(i);
+            } else {
+                if (currentPage <= 4) {
+                    pages = [1, 2, 3, 4, 5, '...', totalPages - 1, totalPages];
+                } else if (currentPage >= totalPages - 3) {
+                    pages = [1, 2, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+                } else {
+                    pages = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+                }
+            }
+
+            pages.forEach(p => {
+                if (p === '...') { 
+        %>
+            <span class="pag-dots">...</span>
+        <% } else { %>
+            <a href="/catalog?type=<%= currentFilter %>&sort=<%= currentSort %>&page=<%= p %>" 
+               class="pag-num <%= currentPage === p ? 'active' : '' %>">
+                <%= p %>
+            </a>
+        <% } }); %>
+
+        <!-- Bouton Suivant -->
+        <% if (currentPage < totalPages) { %>
+            <a href="/catalog?type=<%= currentFilter %>&sort=<%= currentSort %>&page=<%= currentPage + 1 %>" class="pag-btn">
+                <i class="fa-solid fa-chevron-right"></i>
+            </a>
+        <% } %>
+    </div>
+<% } %>

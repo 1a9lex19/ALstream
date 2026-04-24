@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <%- include('partials/head', { title: pageTitle + ' - ALStream' }) %>
+        <link rel="stylesheet" href="/style.css">
+        <!-- FontAwesome déjà inclus dans head.ejs -->
+</head>
+
+<body>
+    <%- include('partials/navbar') %>
+
+        <div class="layout-container">
+            <!-- SIDEBAR -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <% if (typeof user !=='undefined' && user) { %>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div class="avatar-large"
+                                style="display: flex; justify-content: center; align-items: center; color: white; font-size: 1.5rem; font-weight: bold;">
+                                <%= user.username.charAt(0).toUpperCase() %>
+                            </div>
+                            <span class="username">
+                                <%= user.username %>
+                            </span>
+                        </div>
+                        <% } else { %>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div class="avatar-large"
+                                    style="display: flex; justify-content: center; align-items: center; color: white; font-size: 1.5rem;">
+                                    <i class="fas fa-user-times"></i>
+                                </div>
+                                <span class="username">Invité</span>
+                            </div>
+                            <% } %>
+                                <button class="close-sidebar" id="closeSidebarBtn"><i class="fas fa-times"></i></button>
+                </div>
+
+                <div class="sidebar-footer">
+                    <a href="/settings" class="settings-btn">
+                        <i class="fas fa-cog"></i> Paramètres
+                    </a>
+                </div>
+            </aside>
+
+            <main class="content">
+                <div class="catalog-header">
+                    <h2>
+                        <%= pageTitle %>
+                    </h2>
+                </div>
+
+                <!-- BARRE DE RECHERCHE EXTENSIBLE -->
+                <div id="searchContainer" class="expandable-search-container" style="margin-bottom: 20px;">
+                    <div class="search-wrapper">
+                        <form action="/catalog" method="GET">
+                            <input type="hidden" name="type" value="<%= currentFilter %>">
+                            <input type="hidden" name="sort" value="<%= currentSort %>">
+                            <input type="text" name="search" id="mainSearchInput" class="full-width-search"
+                                placeholder="Rechercher un anime, un film...">
+                        </form>
+                    </div>
+                </div>
+                <!-- Dropdown suggestions (hors du conteneur overflow:hidden) -->
+                <div id="liveSearchResults"></div>
+
+                <!-- OPTIONS DE TRI -->
+                <div class="sort-options">
+                    Trier par :
+                    <a href="/catalog?type=<%= currentFilter %>&sort=date"
+                        class="<%= currentSort === 'date' || currentSort === 'default' ? 'active' : '' %>">Récent</a>
+                    <a href="/catalog?type=<%= currentFilter %>&sort=alpha"
+                        class="<%= currentSort === 'alpha' ? 'active' : '' %>">Alphabétique</a>
+                    <a href="/catalog?type=<%= currentFilter %>&sort=ranking"
+                        class="<%= currentSort === 'ranking' ? 'active' : '' %>">Ranking (<i
+                            class="fas fa-star"></i>)</a>
+                </div>
+
+
+
+                <!-- GRILLE VIDEOS -->
+                <div class="video-grid">
+                    <% if (typeof animes==='undefined' || animes.length===0) { %>
+                        <p style="text-align: center; grid-column: 1/-1; color: #666; margin-top: 50px;">Aucun contenu
+                            trouvé.</p>
+                        <% } else { %>
+                            <% animes.forEach(function(anime) { %>
+                                <a href="/watch/<%= anime.slug %>" class="card">
+                                    <div class="card-img-container">
+                                        <img src="<%= anime.affiche || 'https://via.placeholder.com/200x300' %>"
+                                            alt="<%= anime.titre %>" loading="lazy">
+                                        <div class="card-badges">
+                                            <% if (anime.has_vf) { %><span class="tag-badge vf">VF</span>
+                                                <% } %>
+                                                    <% if (anime.has_vostfr) { %><span
+                                                            class="tag-badge vostfr">VOSTFR</span>
+                                                        <% } %>
+                                        </div>
+                                    </div>
+                                    <div class="card-info">
+                                        <h3>
+                                            <%= anime.titre %>
+                                        </h3>
+                                        <div class="card-stars">
+                                            <i class="fas fa-star"></i>
+                                            <%= anime.note ? anime.note.toFixed(1) : '0.0' %>
+                                        </div>
+                                    </div>
+                                </a>
+                                <% }); %>
+                                    <% } %>
+                </div>
+
+                <!-- PAGINATION -->
+                <%- include('partials/pagination') %>
+            </main>
+        </div>
+
+        <%- include('partials/footer') %>
+
+            <script>
+                // --- LOGIQUE SIDEBAR ET RECHERCHE ---
+                const sidebar = document.getElementById('sidebar');
+                const openBtn = document.getElementById('openSidebar');
+                const closeBtn = document.getElementById('closeSidebarBtn');
+                const toggleSearchBtn = document.getElementById('toggleSearchBtn');
+                const searchContainer = document.getElementById('searchContainer');
+                const searchInput = document.getElementById('mainSearchInput');
+                const liveSearchResults = document.getElementById('liveSearchResults');
+
+                if (openBtn) openBtn.onclick = (e) => { e.stopPropagation(); sidebar.classList.add('active'); };
+                if (closeBtn) closeBtn.onclick = (e) => { e.stopPropagation(); sidebar.classList.remove('active'); };
+
+                if (toggleSearchBtn) {
+                    toggleSearchBtn.onclick = () => {
+                        searchContainer.classList.toggle('active');
+                        if (searchContainer.classList.contains('active')) {
+                            setTimeout(() => searchInput.focus(), 300);
+                        } else {
+                            liveSearchResults.style.display = 'none'; // Cache les résultats si on ferme
+                        }
+                    };
+                }
+
+                // Repositionnement du dropdown sous l'input
+                function positionSearchResults() {
+                    if (!searchInput || !liveSearchResults) return;
+                    const rect = searchInput.getBoundingClientRect();
+                    liveSearchResults.style.top = (rect.bottom + window.scrollY) + 'px';
+                    liveSearchResults.style.left = rect.left + 'px';
+                    liveSearchResults.style.width = rect.width + 'px';
+                }
+                window.addEventListener('resize', () => {
+                    if (liveSearchResults.style.display !== 'none') positionSearchResults();
+                });
+
+                // Recherche Live (Autocomplétion)
+                if (searchInput) {
+                    searchInput.addEventListener('input', async (e) => {
+                        const query = e.target.value;
+                        if (query.length < 2) {
+                            liveSearchResults.style.display = 'none';
+                            return;
+                        }
+                        try {
+                            const response = await fetch(`/api/search-live?q=${encodeURIComponent(query)}&type=<%= currentFilter %>`);
+                            const animes = await response.json();
+                            if (animes.length > 0) {
+                                liveSearchResults.innerHTML = animes.map(a => `
+                            <a href="/watch/${a.slug}" class="search-result-item">
+                                <img src="${a.affiche || 'https://via.placeholder.com/55x75'}" alt="">
+                                <div class="search-result-info">
+                                    <h4>${a.titre}</h4>
+                                    <p>${a.synopsis ? a.synopsis.substring(0, 45) + '...' : 'Contenu'}</p>
+                                </div>
+                            </a>`).join('');
+                                positionSearchResults();
+                                liveSearchResults.style.display = 'block';
+                            } else {
+                                liveSearchResults.innerHTML = '<div class="no-result">Aucun résultat</div>';
+                                positionSearchResults();
+                                liveSearchResults.style.display = 'block';
+                            }
+                        } catch (err) { console.error("Erreur recherche live:", err); }
+                    });
+                }
+
+                // Fermeture au clic extérieur (Sidebar et Recherche)
+                document.addEventListener('click', (e) => {
+                    // Fermer Sidebar
+                    if (sidebar.classList.contains('active') && !sidebar.contains(e.target) && e.target !== openBtn) {
+                        sidebar.classList.remove('active');
+                    }
+                    // Fermer Résultats de recherche
+                    const searchWrapper = document.querySelector('.search-wrapper');
+                    if (searchWrapper && !searchWrapper.contains(e.target)) {
+                        liveSearchResults.style.display = 'none';
+                    }
+                });
+
+                // Filtrage tags sidebar (Assure-toi que la fonction filterTags est définie ailleurs si elle n'est pas dans un script JS séparé)
+                function filterTags() {
+                    const input = document.getElementById('tagSearchInput');
+                    const filter = input.value.toLowerCase();
+                    const catTitles = document.querySelectorAll('.category-menu .cat-title');
+
+                    catTitles.forEach(title => {
+                        if (title.innerText.toLowerCase().includes(filter)) {
+                            title.style.display = ""; // Affiche
+                        } else {
+                            title.style.display = "none"; // Cache
+                        }
+                    });
+                }
+            </script>
+</body>
+
+</html>

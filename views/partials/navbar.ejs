@@ -1,0 +1,36 @@
+<header class="navbar">
+    <!-- GAUCHE : Menu Burger -->
+    <div class="nav-left">
+        <button class="menu-trigger" id="openSidebar" title="Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+
+    <!-- CENTRE : Nom du site -->
+    <div class="nav-center">
+        <div class="logo">
+            <a href="/"><span class="highlight">AL</span>Stream</a>
+        </div>
+    </div>
+
+    <!-- DROITE : Recherche, Planning, Profil -->
+    <div class="nav-right">
+        <button class="nav-icon-btn" id="toggleSearchBtn" title="Rechercher">
+            <i class="fas fa-search"></i>
+        </button>
+        
+        <a href="/planning" class="nav-icon-btn" title="Planning">
+            <i class="fas fa-calendar-alt"></i>
+        </a>
+
+        <% if (user) { %>
+            <a href="/profile" class="user-icon" title="Mon Profil">
+                <%= user.username.charAt(0).toUpperCase() %>
+            </a>
+        <% } else { %>
+            <a href="/login" class="user-icon" title="Connexion">
+                <i class="fas fa-user"></i>
+            </a>
+        <% } %>
+    </div>
+</header>

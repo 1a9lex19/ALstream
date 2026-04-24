@@ -1,0 +1,109 @@
+<!-- Fichier : views/partials/player_modal.ejs -->
+
+<div class="video-overlay" id="videoModal">
+    <div class="video-container-modal">
+        <div class="modal-header">
+            <h3 class="modal-title-text" id="modalTitle">Lecture...</h3>
+            <button class="btn-close-modern" onclick="closeVideo()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Sélecteur de lecteurs -->
+        <div class="custom-select-wrapper" id="playerDropdown">
+            <div class="custom-select-trigger" onclick="toggleDropdown(event)">
+                <span id="currentPlayerText">Lecteur</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="custom-options" id="playerOptions"></div>
+        </div>
+
+        <div class="video-wrapper">
+            <iframe id="mainPlayer" src="" frameborder="0" allowfullscreen></iframe>
+        </div>
+
+        <div class="modal-controls">
+            <button class="nav-btn" id="btnPrev" onclick="playPrev()">
+                <i class="fas fa-chevron-left"></i> Précédent
+            </button>
+            <button class="nav-btn" id="btnNext" onclick="playNext()">
+                Suivant <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentPlayingCard = null; // Garde en mémoire la carte de l'épisode en cours
+
+    // Ouvrir/fermer le menu déroulant du lecteur
+    function toggleDropdown(e) {
+        e.stopPropagation();
+        document.getElementById('playerDropdown').classList.toggle('open');
+    }
+    window.onclick = () => document.getElementById('playerDropdown').classList.remove('open');
+
+    // Fonction principale pour ouvrir la vidéo
+    function openVideo(card) {
+        currentPlayingCard = card;
+        let players = JSON.parse(card.dataset.players);
+
+        // Nettoyage des doublons de lecteurs
+        const unique = players.filter((v,i,a)=>a.findIndex(t=>(t.url===v.url))===i);
+        
+        document.getElementById('videoModal').style.display = 'flex';
+        document.getElementById('modalTitle').innerText = card.dataset.title;
+
+        const optionsContainer = document.getElementById('playerOptions');
+        optionsContainer.innerHTML = ''; // Vider les anciennes options
+
+        if (unique.length > 0) {
+            document.getElementById('mainPlayer').src = unique[0].url;
+            document.getElementById('currentPlayerText').innerText = unique[0].nom || 'Lecteur 1';
+            
+            unique.forEach((p, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'custom-option';
+                optionDiv.innerText = p.nom || `Lecteur ${index + 1}`;
+                
+                optionDiv.onclick = () => {
+                    document.getElementById('mainPlayer').src = p.url;
+                    document.getElementById('currentPlayerText').innerText = p.nom;
+                    document.getElementById('playerDropdown').classList.remove('open');
+                };
+                optionsContainer.appendChild(optionDiv);
+            });
+        }
+        updateNavButtons();
+    }
+
+    function closeVideo() {
+        document.getElementById('videoModal').style.display = 'none';
+        document.getElementById('mainPlayer').src = ""; // Arrête la vidéo
+    }
+
+    // Fonctions Précédent / Suivant
+    function updateNavButtons() {
+        const visible = Array.from(document.querySelectorAll('.episode-card[style*="display: block"]'));
+        const currentIndex = visible.indexOf(currentPlayingCard);
+        
+        document.getElementById('btnPrev').disabled = (currentIndex <= 0);
+        document.getElementById('btnNext').disabled = (currentIndex >= visible.length - 1);
+    }
+
+    function playNext() {
+        const visible = Array.from(document.querySelectorAll('.episode-card[style*="display: block"]'));
+        const currentIndex = visible.indexOf(currentPlayingCard);
+        if (currentIndex < visible.length - 1) {
+            openVideo(visible[currentIndex + 1]);
+        }
+    }
+
+    function playPrev() {
+        const visible = Array.from(document.querySelectorAll('.episode-card[style*="display: block"]'));
+        const currentIndex = visible.indexOf(currentPlayingCard);
+        if (currentIndex > 0) {
+            openVideo(visible[currentIndex - 1]);
+        }
+    }
+</script>

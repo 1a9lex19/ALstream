@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('partials/head', { title: 'Admin - ALStream' }) %>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <%- include('partials/navbar') %>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>Admin Dashboard</h1>
+        </div>
+
+        <!-- PLANNING MANAGEMENT -->
+        <div class="admin-section">
+            <h2><i class="fas fa-calendar-alt"></i> Planning Management</h2>
+            <p class="text-muted">Assign a release day to animes to display them on the /planning page.</p>
+
+            <div style="max-height: 300px; overflow-y: auto; background: #1a1a1a; padding: 15px; border-radius: 8px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Anime Title</th>
+                            <th>Release Day</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if(animeList && animeList.length > 0) { %>
+                            <% animeList.forEach(anime => { %>
+                                <tr>
+                                    <td><%= anime.titre %></td>
+                                    <td>
+                                        <form action="/admin/update-day" method="POST" style="margin: 0;">
+                                            <input type="hidden" name="anime_id" value="<%= anime.id %>">
+                                            <select name="jour" onchange="this.form.submit()" class="form-control">
+                                                <option value="">-- None --</option>
+                                                <option value="Lundi" <%= anime.jour_sortie === 'Lundi' ? 'selected' : '' %>>Lundi</option>
+                                                <option value="Mardi" <%= anime.jour_sortie === 'Mardi' ? 'selected' : '' %>>Mardi</option>
+                                                <option value="Mercredi" <%= anime.jour_sortie === 'Mercredi' ? 'selected' : '' %>>Mercredi</option>
+                                                <option value="Jeudi" <%= anime.jour_sortie === 'Jeudi' ? 'selected' : '' %>>Jeudi</option>
+                                                <option value="Vendredi" <%= anime.jour_sortie === 'Vendredi' ? 'selected' : '' %>>Vendredi</option>
+                                                <option value="Samedi" <%= anime.jour_sortie === 'Samedi' ? 'selected' : '' %>>Samedi</option>
+                                                <option value="Dimanche" <%= anime.jour_sortie === 'Dimanche' ? 'selected' : '' %>>Dimanche</option>
+                                            </select>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr><td colspan="2" class="text-center text-muted">No animes found.</td></tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ADD NEW ANIME/MOVIE -->
+        <div class="admin-section">
+            <h2><i class="fas fa-plus-circle"></i> Add New Content</h2>
+            <form action="/admin/add-work" method="POST">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" name="title" required placeholder="Example: One Piece">
+                </div>
+                <div class="form-group">
+                    <label>Image URL (Poster)</label>
+                    <input type="text" name="image" placeholder="https://image.tmdb.org/...">
+                </div>
+                <div class="form-group">
+                    <label>Type / Categories</label>
+                    <div class="tags-grid">
+                        <!-- Simplified categories -->
+                        <div class="tag-item"><input type="checkbox" name="type" value="Anime" id="type_anime"><label for="type_anime">Anime (Série)</label></div>
+                        <div class="tag-item"><input type="checkbox" name="type" value="Movie" id="type_movie"><label for="type_movie">Movie (Film)</label></div>
+                        <div class="tag-item"><input type="checkbox" name="type" value="TV Shows" id="type_tvshow"><label for="type_tvshow">TV Show (Série Live)</label></div>
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit">Add to Catalog</button>
+            </form>
+        </div>
+
+        <!-- ADD NEW EPISODE -->
+        <div class="admin-section">
+            <h2><i class="fas fa-video"></i> Add Episode</h2>
+            <form action="/admin/add-episode" method="POST">
+                <div class="form-group">
+                    <label>Select Content</label>
+                    <select name="anime_id" required class="form-control">
+                        <option value="" disabled selected>-- Choose Content --</option>
+                        <% if(animeList && animeList.length > 0) { %>
+                            <% animeList.forEach(anime => { %>
+                                <option value="<%= anime.id %>"><%= anime.titre %> (ID: <%= anime.id %>)</option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Season</label>
+                        <input type="number" name="saison" value="1" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Episode Number</label>
+                        <input type="number" name="episode" min="1" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Language</label>
+                    <select name="langue" class="form-control">
+                        <option value="VOSTFR">VOSTFR</option>
+                        <option value="VF">VF</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Video Link (Vidmoly / Embed)</label>
+                    <input type="text" name="url" required placeholder="https://vidmoly.net/...">
+                </div>
+                <button type="submit" class="btn-submit">Add Episode</button>
+            </form>
+        </div>
+
+        <!-- REMOVE CONTENT (ANIME) -->
+        <div class="admin-section delete-section">
+            <h2><i class="fas fa-trash-alt"></i> Remove Content</h2>
+            <p class="text-muted">Warning: Deleting content will remove all its episodes.</p>
+            <form action="/admin/delete-work" method="POST" onsubmit="return confirm('Are you sure?');">
+                <div class="form-group">
+                    <label>Select Content to Delete</label>
+                    <select name="anime_id" required class="form-control">
+                        <option value="" disabled selected>-- Select Content --</option>
+                        <% if(animeList && animeList.length > 0) { %>
+                            <% animeList.forEach(anime => { %>
+                                <option value="<%= anime.id %>"><%= anime.titre %> (ID: <%= anime.id %>)</option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                </div>
+                <button type="submit" class="btn-submit btn-delete">Delete Content</button>
+            </form>
+        </div>
+
+        <!-- REMOVE SPECIFIC EPISODE -->
+        <div class="admin-section delete-section">
+            <h2><i class="fas fa-trash"></i> Remove Specific Episode</h2>
+            <form action="/admin/delete-episode" method="POST" onsubmit="return confirm('Are you sure?');">
+                <div class="form-group">
+                    <label>Select Episode to Remove</label>
+                    <select name="episode_id" required class="form-control big-select" size="10">
+                        <% if(episodeList && episodeList.length > 0) { %>
+                            <% episodeList.forEach(ep => { %>
+                                <option value="<%= ep.id %>"><%= ep.anime_titre %> : S<%= ep.saison %> - Ep <%= ep.episode %></option>
+                            <% }); %>
+                        <% } else { %>
+                            <option disabled>No episodes loaded.</option>
+                        <% } %>
+                    </select>
+                </div>
+                <button type="submit" class="btn-submit btn-delete">Delete Episode</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
